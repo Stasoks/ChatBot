@@ -6,6 +6,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Data.SQLite;
+using static System.Net.WebRequestMethods;
 
 
 namespace ChatBot
@@ -18,7 +19,7 @@ namespace ChatBot
         private static string connectionString = "Data Source=..//..//..//Users_DB.db";
 
         //DeleteWebhookRequest _deleteWebhookRequest;
-        //https://t.me/TeSt222288bot?start=ref01
+        //https://t.me/TeSt222288bot?start=1213213454
 
         public static ReplyKeyboardMarkup menu = new(new[]
         {
@@ -31,9 +32,9 @@ namespace ChatBot
         };
 
         public static ReplyKeyboardMarkup checksubscribe = new(new[]
-                    {
-                        new KeyboardButton[] { "COMPROBAR SUSCRIPCIÓN" },
-                    })
+        {
+            new KeyboardButton[] { "COMPROBAR SUSCRIPCIÓN" },
+        })
         {
             ResizeKeyboard = true
         };
@@ -71,41 +72,31 @@ namespace ChatBot
 
             async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
             {   
-                if (update.Message == null) { return; }
                 var message = update.Message;
-                var messageText = update.Message.Text;
-                var chatId = message.Chat.Id;
-                var GroupChatId = "#-1002054923410";
-                var callback = update.CallbackQuery;
-                bool Tim = false;
-                string nameUsers;
-
-
-                if (update.Message.Type == MessageType.ChatMemberLeft)
-                {
-                    //string[] textFromFile = System.IO.File.ReadAllLines(PATH);
-                    //var Ids = new List<string>(textFromFile);
-                    //Ids.Remove(update.Message.LeftChatMember.Id.ToString());
-
-                    //System.IO.File.Delete(PATH);
-                    //System.IO.File.WriteAllLines(PATH, textFromFile);
+                var messageText = "";
+                long chatId = 0;
+                if (message != null) { 
+                    messageText = update.Message.Text; 
+                    chatId = message.Chat.Id;
                 }
+                var callback = update.CallbackQuery;
 
-                if (update.Message.Type == MessageType.ChatMembersAdded)
+
+                if (update.Type == UpdateType.ChatMember)
                 {
-                    //string[] a = new string[] { update.Message.NewChatMembers[0].Id.ToString() };
-                    //System.IO.File.AppendAllLines(PATH, a);
-
-                    SQLiteCommand command = new SQLiteCommand();
-                    command.Connection = connection;
-                    command.CommandText = $"INSERT INTO Users (Id, Money) VALUES ('{update.Message.NewChatMembers[0].Id}', 0)";
-                    command.ExecuteNonQuery();
+                    if (update.ChatMember != null)
+                    {
+                        SQLiteCommand command = new SQLiteCommand();
+                        command.Connection = connection;
+                        command.CommandText = $"INSERT INTO Users (Id, Money, Friends, Cases) VALUES ('{update.ChatMember.NewChatMember.User.Id}', 0, 0, 0)";
+                        command.ExecuteNonQuery();
+                    }
                 }
 
                 if (messageText != null)
                 {
 
-                    if (messageText.Contains("/START"))
+                    if (messageText.Contains("/start"))
                     {
                         ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
                         {
@@ -114,6 +105,19 @@ namespace ChatBot
                         {
                             ResizeKeyboard = true
                         };
+                        long id;
+                        if (long.TryParse(messageText.Substring(7), out id))
+                        {
+                            if (message.From.Id != id)
+                            {
+
+                                SQLiteCommand command = new SQLiteCommand();
+                                command.Connection = connection;
+                                command.CommandText = $"UPDATE Users SET Money = Money + 500, Friends = Friends + 1 WHERE Id = {id};";
+                                command.ExecuteNonQuery();
+                            }
+                        }
+
                         Message sendMessage = await botClient.SendTextMessageAsync(
                              chatId: chatId,
                              text: "PRIMERO VAMOS A CONOCERNOS - EN ESTE POST OS VOY A CONTAR UN\r\nPOCO SOBRE NOSOTROS\r\nSomos el equipo de desarrollo de inteligencia artificial \"MATEMATICAS.IO\".\r\nNuestra inteligencia artificial se especializará en resolver ejemplos y\r\necuaciones matemáticas complejas, y esperamos que sea muy útil para\r\ntodos en el campo de las matemáticas y la ingeniería, ya que sustituirá el\r\ntrabajo humano por cálculos automáticos de máquinas.\r\nLa inteligencia artificial se auto-desarrolla constantemente - todos esos\r\nejemplos que resolverás en este bot irán a la base de nuestra red neuronal y\r\nel bot será entrenado y desarrollado\r\nESTÁS LISTO PARA EMPEZAR A GANAR AHORA MISMO?",
@@ -200,18 +204,32 @@ namespace ChatBot
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: "MENU",
+                            text: $"REENVÍA ESTE MENSAJE A TUS AMIGOS Y POR CADA AMIGO QUE SE UNA A TRAVÉS\r\nDE ESTE ENLACE RECIBIRÁS 500 MXN, https://t.me/TeSt222288bot?start={message.From.Id}",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken);
                     }
 
                     if (messageText.Contains("MI PERFIL/BALANCE"))
                     {
+                        SQLiteCommand command = new SQLiteCommand();
+                        command.Connection = connection;
+                        command.CommandText = $"SELECT Money, Friends, Cases  FROM Users WHERE Id = {update.Message.From.Id}";
+                        SQLiteDataReader reader = command.ExecuteReader();
+                        string Money = "";
+
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                Money = reader.GetValue(0).ToString();
+                            }
+                        }
+
                         Message sendMessage = await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            text: "MENU",
+                        chatId: chatId,
+                            text: "TU NÚMERO ES - update.Message.From.Id\r\nHORAS QUE LLEVAS\r\nTRABAJANDO CON\r\nNOSOTROS\r\nNÚMERO DE EJEMPLOS\r\nRESUELTOS\r\nNÚMERO DE AMIGOS\r\nINVITADOS\r\nTU SALDO",
                             replyMarkup: menu,
-                            cancellationToken: cancellationToken);
+                            cancellationToken: cancellationToken); 
                     }
                 }
             }
