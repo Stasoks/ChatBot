@@ -17,15 +17,28 @@ namespace ChatBot
         private static ITelegramBotClient _botClient;
         private static ReceiverOptions _receiverOptions;
         private static string connectionString = "Data Source=..//..//..//Users_DB.db";
+        private static string Link = "https://t.me/+0gfb7z3CK3c5ODQ0";
 
+        static Dictionary<long, string> equations = new Dictionary<long, string>();
+
+        static Random rnd = new Random();
+        //int tima = rnd.Next(1,  1000);
         //DeleteWebhookRequest _deleteWebhookRequest;
-        //https://t.me/TeSt222288bot?start=1213213454
+        //https://t.me/TeSt222288bot?start=1760080161
 
         public static ReplyKeyboardMarkup menu = new(new[]
         {
             new KeyboardButton[] { "Ejemplos matemáticos" },
             new KeyboardButton[] { "INVITAR A AMIGOS" },
             new KeyboardButton[] { "MI PERFIL/BALANCE" },
+        })
+        {
+            ResizeKeyboard = true
+        };
+        public static ReplyKeyboardMarkup primers = new(new[]
+        {
+            new KeyboardButton[] { "Ejemplos matemáticos" },
+            new KeyboardButton[] { "MENÚ GENERAL" },
         })
         {
             ResizeKeyboard = true
@@ -81,6 +94,7 @@ namespace ChatBot
                 }
                 var callback = update.CallbackQuery;
 
+                int answer = 0;
 
                 if (update.Type == UpdateType.ChatMember)
                 {
@@ -95,6 +109,35 @@ namespace ChatBot
 
                 if (messageText != null)
                 {
+                    if(int.TryParse(messageText, out answer)) 
+                    {
+                        string equation = "";
+                        if(equations.TryGetValue(message.From.Id, out equation))
+                        {
+                            if((int.Parse(equation.Substring(0, 3)) + int.Parse(equation.Substring(6, 3))) == answer)
+                            {
+                                SQLiteCommand command = new SQLiteCommand();
+                                command.Connection = connection;
+                                command.CommandText = $"UPDATE Users SET Money = Money + 50, Cases = Cases + 1 WHERE Id = {message.From.Id};";  
+                                command.ExecuteNonQuery();
+                                equations.Remove(message.From.Id);
+
+                                Message sendMessage = await botClient.SendTextMessageAsync(
+                             chatId: chatId,
+                             text: "ОТВЕТ ВЕРНЫЙ !\r\nНА ВАШ БАЛАНС\r\nЗАЧИСЛЕНО + 50 MXN",
+                             replyMarkup: primers);
+                            }
+
+                            else
+                            {
+                                Message sendMessage = await botClient.SendTextMessageAsync(
+                             chatId: chatId,
+                             text: "ПIШОВ НАХУЙ",
+                             replyMarkup: primers);
+                            }
+                        }
+                    }
+
 
                     if (messageText.Contains("/start"))
                     {
@@ -106,7 +149,7 @@ namespace ChatBot
                             ResizeKeyboard = true
                         };
                         long id;
-                        if (long.TryParse(messageText.Substring(7), out id))
+                        if (messageText.Length > 16 && long.TryParse(messageText.Substring(7), out id))
                         {
                             if (message.From.Id != id)
                             {
@@ -127,8 +170,6 @@ namespace ChatBot
 
                     if (messageText.Contains("COMENZAR A GANAR")) //готов
                     {
-
-
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             text: "Para empezar,suscríbase a nuestro canal de noticias",
@@ -139,8 +180,6 @@ namespace ChatBot
 
                     if (messageText.Contains("COMPROBAR SUSCRIPCIÓN")) //проверка пиписки
                     {
-                        //var subscribe = await botClient.GetChatMemberAsync(chatId: "@dasdasdasdasdasqweqw", userId: update.Message.From.Id);
-
                         SQLiteCommand command = new SQLiteCommand();
                         command.Connection = connection;
                         command.CommandText = $"SELECT * FROM Users WHERE Id = {update.Message.From.Id}";
@@ -160,17 +199,15 @@ namespace ChatBot
                                 text: "MUY BIEN, PUEDES EMPEZAR.\r\nHAY DOS TIPOS DE INGRESOS\r\n1 - RESOLVIENDO EJEMPLOS DE MATEMÁTICAS ( 50MXN POR CADA EJEMPLO RESUELTO )\r\n2 - INVITAR A TUS AMIGOS A ESTE BOT ( 500 MXM POR CADA AMIGO INVITADO )",
                                 replyMarkup: menu,
                                 cancellationToken: cancellationToken);
-
                         }
+
                         else
                         {
                             Message sendMessage = await botClient.SendTextMessageAsync(
                                 chatId: chatId,
-                                text: "Вы не подписаны",
+                                text: $"Suscribir: {Link}",
                                 replyMarkup: checksubscribe,
                                 cancellationToken: cancellationToken);
-
-
                         }
                     }
 
@@ -182,16 +219,7 @@ namespace ChatBot
                             cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("/menu"))
-                    {
-                        Message sendMessage = await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            text: "MENU",
-                            replyMarkup: menu,
-                            cancellationToken: cancellationToken);
-                    }
-
-                    if (messageText.Contains("Ejemplos matemáticos"))
+                    if (messageText.Contains("MENÚ GENERAL"))
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
@@ -216,22 +244,54 @@ namespace ChatBot
                         command.CommandText = $"SELECT Money, Friends, Cases  FROM Users WHERE Id = {update.Message.From.Id}";
                         SQLiteDataReader reader = command.ExecuteReader();
                         string Money = "";
+                        string Friends = "";
+                        string Cases = "";
 
                         if (reader.HasRows)
                         {
                             while (reader.Read())
                             {
-                                Money = reader.GetValue(0).ToString();
+                                Money   = reader.GetValue(0).ToString();
+                                Friends = reader.GetValue(1).ToString();
+                                Cases   = reader.GetValue(2).ToString();
+
                             }
                         }
 
                         Message sendMessage = await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                            text: "TU NÚMERO ES - update.Message.From.Id\r\nHORAS QUE LLEVAS\r\nTRABAJANDO CON\r\nNOSOTROS\r\nNÚMERO DE EJEMPLOS\r\nRESUELTOS\r\nNÚMERO DE AMIGOS\r\nINVITADOS\r\nTU SALDO",
+                            text: $"TU NÚMERO ES - {update.Message.From.Id}\r\nHORAS QUE LLEVAS\r\nTRABAJANDO CON\r\nNOSOTROS\r\nNÚMERO DE EJEMPLOS\r\nRESUELTOS - {Cases}\r\nNÚMERO DE AMIGOS\r\nINVITADOS - {Friends}\r\nTU SALDO - {Money}",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken); 
                     }
+
+                    if (messageText.Contains("Ejemplos matemáticos"))
+                    {
+                        GenerateEquation(botClient,update,message,chatId);
+                    } 
                 }
+            }
+
+            async Task GenerateEquation( ITelegramBotClient botClient, Update update, Message message, ChatId chatId )
+            {
+                int onefour = rnd.Next(100, 1000);
+                int eighteight = rnd.Next(100, 1000);
+
+                if (equations.ContainsKey(message.From.Id))
+                {
+                    equations[message.From.Id] = $"{onefour} + {eighteight}";
+                }
+                else
+                {
+                    equations.Add(message.From.Id, $"{onefour} + {eighteight}");
+                }
+
+
+                Message sendMessage = await botClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    text: $"YOUR PRIMERO MAZAFAKA {onefour} + {eighteight}",
+                    replyMarkup: primers
+                    );
             }
 
             Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
