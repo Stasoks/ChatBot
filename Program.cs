@@ -13,24 +13,23 @@ namespace ChatBot
 {
     class Program()
     {
-        static string PATH = "..//..//..//members.txt";
         private static ITelegramBotClient _botClient;
         private static ReceiverOptions _receiverOptions;
+
         private static string connectionString = "Data Source=..//..//..//Users_DB.db";
         private static string Link = "https://t.me/+0gfb7z3CK3c5ODQ0";
+        public  static string managerLink = "@tasikkk";
+        public  static string BotId = "TeSt222288bot";
 
         static Dictionary<long, string> equations = new Dictionary<long, string>();
-
         static Random rnd = new Random();
-        //int tima = rnd.Next(1,  1000);
-        //DeleteWebhookRequest _deleteWebhookRequest;
-        //https://t.me/TeSt222288bot?start=1760080161
 
         public static ReplyKeyboardMarkup menu = new(new[]
         {
             new KeyboardButton[] { "Ejemplos matemáticos" },
-            new KeyboardButton[] { "INVITAR A AMIGOS" },
-            new KeyboardButton[] { "MI PERFIL/BALANCE" },
+            new KeyboardButton[] { "Invitar a amigos" },
+            new KeyboardButton[] { "Mi perfil/balance" },
+            new KeyboardButton[] { "Retiros" }
         })
         {
             ResizeKeyboard = true
@@ -38,7 +37,7 @@ namespace ChatBot
         public static ReplyKeyboardMarkup primers = new(new[]
         {
             new KeyboardButton[] { "Ejemplos matemáticos" },
-            new KeyboardButton[] { "MENÚ GENERAL" },
+            new KeyboardButton[] { "Menú general" },
         })
         {
             ResizeKeyboard = true
@@ -46,7 +45,7 @@ namespace ChatBot
 
         public static ReplyKeyboardMarkup checksubscribe = new(new[]
         {
-            new KeyboardButton[] { "COMPROBAR SUSCRIPCIÓN" },
+            new KeyboardButton[] { "Comprobar suscripción" },
         })
         {
             ResizeKeyboard = true
@@ -102,7 +101,7 @@ namespace ChatBot
                     {
                         SQLiteCommand command = new SQLiteCommand();
                         command.Connection = connection;
-                        command.CommandText = $"INSERT INTO Users (Id, Money, Friends, Cases) VALUES ('{update.ChatMember.NewChatMember.User.Id}', 0, 0, 0)";
+                        command.CommandText = $"INSERT INTO Users (Id, Money, Friends, Cases, StartTime) VALUES ('{update.ChatMember.NewChatMember.User.Id}', 0, 0, 0, datetime('now'))";
                         command.ExecuteNonQuery();
                     }
                 }
@@ -124,16 +123,18 @@ namespace ChatBot
 
                                 Message sendMessage = await botClient.SendTextMessageAsync(
                              chatId: chatId,
-                             text: "ОТВЕТ ВЕРНЫЙ !\r\nНА ВАШ БАЛАНС\r\nЗАЧИСЛЕНО + 50 MXN",
+                             text: "¡La respuesta es correcta!\r\a tu saldo\r\acreditado + 50 MXN",
                              replyMarkup: primers);
                             }
 
                             else
                             {
                                 Message sendMessage = await botClient.SendTextMessageAsync(
-                             chatId: chatId,
-                             text: "ПIШОВ НАХУЙ",
-                             replyMarkup: primers);
+                                 chatId: chatId,
+                                 text: "Error! intentar de\r\nnuevo",
+                                 replyMarkup: primers);
+                                Thread.Sleep(2000);
+                                GenerateEquation(botClient, update, message, chatId);
                             }
                         }
                     }
@@ -143,13 +144,13 @@ namespace ChatBot
                     {
                         ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
                         {
-                        new KeyboardButton[] { "COMENZAR A GANAR" },
+                        new KeyboardButton[] { "Comenzar a ganar" },
                     })
                         {
                             ResizeKeyboard = true
                         };
                         long id;
-                        if (messageText.Length > 16 && long.TryParse(messageText.Substring(7), out id))
+                        if (messageText.Length > 15 && long.TryParse(messageText.Substring(7), out id))
                         {
                             if (message.From.Id != id)
                             {
@@ -163,12 +164,12 @@ namespace ChatBot
 
                         Message sendMessage = await botClient.SendTextMessageAsync(
                              chatId: chatId,
-                             text: "PRIMERO VAMOS A CONOCERNOS - EN ESTE POST OS VOY A CONTAR UN\r\nPOCO SOBRE NOSOTROS\r\nSomos el equipo de desarrollo de inteligencia artificial \"MATEMATICAS.IO\".\r\nNuestra inteligencia artificial se especializará en resolver ejemplos y\r\necuaciones matemáticas complejas, y esperamos que sea muy útil para\r\ntodos en el campo de las matemáticas y la ingeniería, ya que sustituirá el\r\ntrabajo humano por cálculos automáticos de máquinas.\r\nLa inteligencia artificial se auto-desarrolla constantemente - todos esos\r\nejemplos que resolverás en este bot irán a la base de nuestra red neuronal y\r\nel bot será entrenado y desarrollado\r\nESTÁS LISTO PARA EMPEZAR A GANAR AHORA MISMO?",
+                             text: "Primero vamos a conocernos - en este post os voy a contar un\r\npoco sobre nosotros\r\nsomos el equipo de desarrollo de inteligencia artificial \"matematicas.io\".\r\nnuestra inteligencia artificial se especializará en resolver ejemplos y\r\necuaciones matemáticas complejas, y esperamos que sea muy útil para\r\ntodos en el campo de las matemáticas y la ingeniería, ya que sustituirá el\r\ntrabajo humano por cálculos automáticos de máquinas.\r\nla inteligencia artificial se auto-desarrolla constantemente - todos esos\r\nejemplos que resolverás en este bot irán a la base de nuestra red neuronal y\r\nel bot será entrenado y desarrollado\r\nestás listo para empezar a ganar ahora mismo?",
                              replyMarkup: replyKeyboardMarkup,
                              cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("COMENZAR A GANAR")) //готов
+                    if (messageText.Contains("Comenzar a ganar")) //готов
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
@@ -178,7 +179,7 @@ namespace ChatBot
                             );
                     }
 
-                    if (messageText.Contains("COMPROBAR SUSCRIPCIÓN")) //проверка пиписки
+                    if (messageText.Contains("Comprobar suscripción")) //проверка пиписки
                     {
                         SQLiteCommand command = new SQLiteCommand();
                         command.Connection = connection;
@@ -190,13 +191,13 @@ namespace ChatBot
                             //https://t.me/dasdasdasdasdasqweqw
                             Message sendMessage = await botClient.SendTextMessageAsync(
                                chatId: chatId,
-                               text: "НА ВАШ БАЛАНС\r\nНАЧИСЛЕН ПОДАРОК -\r\n500MXN",
+                               text: "En tu saldo\r\ncarga regalo - 500MXN",
                                cancellationToken: cancellationToken);
                             Thread.Sleep(1500);
 
                             await botClient.SendTextMessageAsync(
                                 chatId: chatId,
-                                text: "MUY BIEN, PUEDES EMPEZAR.\r\nHAY DOS TIPOS DE INGRESOS\r\n1 - RESOLVIENDO EJEMPLOS DE MATEMÁTICAS ( 50MXN POR CADA EJEMPLO RESUELTO )\r\n2 - INVITAR A TUS AMIGOS A ESTE BOT ( 500 MXM POR CADA AMIGO INVITADO )",
+                                text: "Muy bien, puedes empezar.\r\nhay dos tipos de ingresos\r\n1 - Resolviendo ejemplos de matemáticas (50MXN por cada ejemplo resuelto)\r\n2 - Invitar a tus amigos a este bot (500 MXN por cada amigo invitado)",
                                 replyMarkup: menu,
                                 cancellationToken: cancellationToken);
                         }
@@ -205,7 +206,7 @@ namespace ChatBot
                         {
                             Message sendMessage = await botClient.SendTextMessageAsync(
                                 chatId: chatId,
-                                text: $"Suscribir: {Link}",
+                                text: $"Para empezar,\r\nsuscríbase a nuestro\r\ncanal de noticias\r\n {Link}",
                                 replyMarkup: checksubscribe,
                                 cancellationToken: cancellationToken);
                         }
@@ -219,33 +220,34 @@ namespace ChatBot
                             cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("MENÚ GENERAL"))
+                    if (messageText.Contains("Menú general"))
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: "MENU",
+                            text: "Menu",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("INVITAR A AMIGOS"))
+                    if (messageText.Contains("Invitar a amigos"))
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: $"REENVÍA ESTE MENSAJE A TUS AMIGOS Y POR CADA AMIGO QUE SE UNA A TRAVÉS\r\nDE ESTE ENLACE RECIBIRÁS 500 MXN, https://t.me/TeSt222288bot?start={message.From.Id}",
+                            text: $"Reenvía este mensaje a tus amigos y por cada amigo que se una a través\r\nde este enlace recibirás 500 MXN, https://t.me/{BotId}?start={message.From.Id}",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("MI PERFIL/BALANCE"))
+                    if (messageText.Contains("Mi perfil/balance"))
                     {
                         SQLiteCommand command = new SQLiteCommand();
                         command.Connection = connection;
-                        command.CommandText = $"SELECT Money, Friends, Cases  FROM Users WHERE Id = {update.Message.From.Id}";
+                        command.CommandText = $"SELECT Money, Friends, Cases, (julianday('now') - julianday(StartTime))*24 FROM Users WHERE Id = {update.Message.From.Id}";
                         SQLiteDataReader reader = command.ExecuteReader();
                         string Money = "";
                         string Friends = "";
                         string Cases = "";
+                        float Hours = 0;
 
                         if (reader.HasRows)
                         {
@@ -254,20 +256,55 @@ namespace ChatBot
                                 Money   = reader.GetValue(0).ToString();
                                 Friends = reader.GetValue(1).ToString();
                                 Cases   = reader.GetValue(2).ToString();
-
+                                Hours = float.Parse(reader.GetValue(3).ToString());
                             }
                         }
 
                         Message sendMessage = await botClient.SendTextMessageAsync(
                         chatId: chatId,
-                            text: $"TU NÚMERO ES - {update.Message.From.Id}\r\nHORAS QUE LLEVAS\r\nTRABAJANDO CON\r\nNOSOTROS\r\nNÚMERO DE EJEMPLOS\r\nRESUELTOS - {Cases}\r\nNÚMERO DE AMIGOS\r\nINVITADOS - {Friends}\r\nTU SALDO - {Money}",
+                            text: $"Tu número es - {update.Message.From.Id}\r\n{Math.Round(Hours, 1)} Horas que llevas\r\ntrabajando con\r\nnosotros\r\nnúmero de ejemplos\r\nresueltos - {Cases}\r\nNúmero de amigos\r\ninvitados - {Friends}\r\nTu saldo - {Money}",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken); 
+                    }
+                    if (messageText.Contains("Retiros"))
+                    {
+                        SQLiteCommand command = new SQLiteCommand();
+                        command.Connection = connection;
+                        command.CommandText = $"SELECT Money FROM Users WHERE Id = {update.Message.From.Id}";
+                        SQLiteDataReader reader = command.ExecuteReader();
+                        long Money = 0;
+
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                Money = (long)reader.GetValue(0);
+
+                            }
+                        }
+
+                        if (Money >= 15000)
+                        {
+                            Message sendMessage = await botClient.SendTextMessageAsync(
+                           chatId: chatId,
+                           text: $"Póngase en contacto con su gerente financiero personal - {managerLink}",
+                           replyMarkup: menu,
+                           cancellationToken: cancellationToken);
+                        }
+                        else
+                        {
+                            Message sendMessage = await botClient.SendTextMessageAsync(
+                           chatId: chatId,
+                           text: "Mínimo cantidad a retiro 15.000",
+                           replyMarkup: menu,
+                           cancellationToken: cancellationToken);
+
+                        }
                     }
 
                     if (messageText.Contains("Ejemplos matemáticos"))
                     {
-                        GenerateEquation(botClient,update,message,chatId);
+                        GenerateEquation(botClient, update, message, chatId);
                     } 
                 }
             }
@@ -289,7 +326,7 @@ namespace ChatBot
 
                 Message sendMessage = await botClient.SendTextMessageAsync(
                     chatId: chatId,
-                    text: $"YOUR PRIMERO MAZAFAKA {onefour} + {eighteight}",
+                    text: $"Your primero {onefour} + {eighteight}",
                     replyMarkup: primers
                     );
             }
