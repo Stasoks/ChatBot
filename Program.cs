@@ -36,8 +36,9 @@ namespace ChatBot
         #endregion
 
         #region Program сonstansts
-        private const string resourcesPath = "resources//";
-        private const string connectionString = "Data Source=Users_DB.db";
+        private const string stepBack = "..//..//..//"; //stepback = "" if release, = "..//..//..//" if debug
+        private const string resourcesPath = $"{stepBack}resources//";
+        private const string connectionString = $"Data Source={stepBack}Users_DB.db";
         private const string NewsChannelLink = "https://t.me/+0gfb7z3CK3c5ODQ0";
         private const string managerLink = "@Brouz39";
         private const string BotId = "TeSt222288bot";
@@ -83,7 +84,7 @@ namespace ChatBot
             connection.Open();
 
 
-            _botClient = new TelegramBotClient("1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ");
+            _botClient = new TelegramBotClient("6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60"); //1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ
             _receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[]
@@ -174,7 +175,7 @@ namespace ChatBot
                                      parseMode: ParseMode.Html,
                                      text: "<b>Error</b> ❗️\r\n\r\nintentar de nuevo 👇🏾",
                                      replyMarkup: primers);
-                                Thread.Sleep(2000);
+                                Thread.Sleep(1500);
                                 GenerateEquation(botClient, update, message, chatId);
                             }
                         }
