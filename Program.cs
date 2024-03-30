@@ -40,7 +40,7 @@ namespace ChatBot
         private const string resourcesPath = $"{stepBack}resources//";
         private const string connectionString = $"Data Source={stepBack}Users_DB.db";
         private const string NewsChannelLink = "https://t.me/+0gfb7z3CK3c5ODQ0";
-        private const string managerLink = "@Brouz39";
+        private const string managerLink = "@Matematicas_support";
         private const string BotId = "TeSt222288bot";
         #endregion
 
@@ -51,7 +51,8 @@ namespace ChatBot
             new KeyboardButton[] { "ECUACIONES MATEMÁTICAS  (+ 50MXN)🔢" },
             new KeyboardButton[] { "INVITA A TUS AMIGOS (+500MXN) 📥" },
             new KeyboardButton[] { "BALANCE 🤑" },
-            new KeyboardButton[] { "RETIRAR DINERO ❤️‍🔥" }
+            new KeyboardButton[] { "RETIRAR DINERO ❤️‍🔥" },
+             new KeyboardButton[] { "SERVICIO DE APOYO🛡" }
         })
         {
             ResizeKeyboard = true
@@ -82,9 +83,7 @@ namespace ChatBot
 
             var connection = new SQLiteConnection(connectionString);
             connection.Open();
-
-
-            _botClient = new TelegramBotClient("6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60"); //1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ
+            _botClient = new TelegramBotClient("1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ"); //6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60
             _receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[]
@@ -268,16 +267,7 @@ namespace ChatBot
                                 cancellationToken: cancellationToken);
                         }
                     }
-
-                    if (messageText.Contains("/help"))
-                    {
-                        Message sendMessage = await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            text: "Use /menu to call menu",
-                            cancellationToken: cancellationToken);
-                    }
-
-                    if (messageText.Contains("Menú general"))
+                    if (messageText.Contains("MENU GENERAL 📑"))
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
@@ -307,12 +297,11 @@ namespace ChatBot
                     {
                         SQLiteCommand command = new SQLiteCommand();
                         command.Connection = connection;
-                        command.CommandText = $"SELECT Money, Friends, Cases, (julianday('now') - julianday(StartTime))*24 FROM Users WHERE Id = {update.Message.From.Id}";
+                        command.CommandText = $"SELECT Money, Friends, Cases FROM Users WHERE Id = {update.Message.From.Id}";
                         SQLiteDataReader reader = command.ExecuteReader();
                         string Money = "";
                         string Friends = "";
                         string Cases = "";
-                        float Hours = 0;
 
                         if (reader.HasRows)
                         {
@@ -321,14 +310,13 @@ namespace ChatBot
                                 Money   = reader.GetValue(0).ToString();
                                 Friends = reader.GetValue(1).ToString();
                                 Cases   = reader.GetValue(2).ToString();
-                                Hours = float.Parse(reader.GetValue(3).ToString());
                             }
                         }
 
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             parseMode : ParseMode.Html,
-                            text: $"❗️Tu número es - <b>{update.Message.From.Id}</b> ❗️\r\n\r\n\r\n🔢 Número de ejemplos\r\nresueltos - <b>{Friends}</b>\r\n\r\n📥 Número de amigos\r\ninvitados - 0\r\n\r\n💰Tu saldo - <b>{Money}</b>",
+                            text: $"❗️Tu número es - <b>{update.Message.From.Id}</b> ❗️\r\n\r\n\r\n🔢 Número de ejemplos\r\nresueltos - <b>{Cases}</b>\r\n\r\n📥 Número de amigos\r\ninvitados - {Friends}\r\n\r\n💰Tu saldo - <b>{Money}</b>",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken); 
                     }
@@ -371,7 +359,16 @@ namespace ChatBot
                     if (messageText.Contains("ECUACIONES MATEMÁTICAS  (+ 50MXN)🔢"))
                     {
                         GenerateEquation(botClient, update, message, chatId);
-                    } 
+                    }
+                    if (messageText.Contains("SERVICIO DE APOYO🛡")) //готов
+                    {
+                        Message sendMessage = await botClient.SendTextMessageAsync(
+                            chatId: chatId,
+                            text: $"Dirija su pregunta a su gerente - {managerLink}",
+                            replyMarkup: menu,
+                            cancellationToken: cancellationToken
+                            );
+                    }
                 }
             }
 
