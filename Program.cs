@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Data.SQLite;
+using System.Xml.Linq;
 
 
 namespace ChatBot
@@ -42,6 +43,7 @@ namespace ChatBot
         private const string NewsChannelLink = "https://t.me/+0gfb7z3CK3c5ODQ0";
         private const string managerLink = "@Matematicas_support";
         private const string BotId = "TeSt222288bot";
+        private const long adminId = 1760080161;
         #endregion
 
 
@@ -50,6 +52,17 @@ namespace ChatBot
         {
             new KeyboardButton[] { "ECUACIONES MATEMÁTICAS  (+ 50MXN)🔢" },
             new KeyboardButton[] { "INVITA A TUS AMIGOS (+500MXN) 📥" },
+            new KeyboardButton[] { "BALANCE 🤑" },
+            new KeyboardButton[] { "RETIRAR DINERO ❤️‍🔥" },
+             new KeyboardButton[] { "SERVICIO DE APOYO🛡" }
+        })
+        {
+            ResizeKeyboard = true
+        };
+        public static ReplyKeyboardMarkup adminmenu = new(new[]
+        {
+            new KeyboardButton[] { "Кол-во вступивших в бот сегодня" },
+            new KeyboardButton[] { "База пользователей" },
             new KeyboardButton[] { "BALANCE 🤑" },
             new KeyboardButton[] { "RETIRAR DINERO ❤️‍🔥" },
              new KeyboardButton[] { "SERVICIO DE APOYO🛡" }
@@ -180,7 +193,6 @@ namespace ChatBot
                         }
                     }
 
-
                     if (messageText.Contains("/start"))
                     {
                         ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
@@ -216,56 +228,80 @@ namespace ChatBot
                              cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("Comenzar a ganar")) //готов
+                    switch (messageText)
                     {
-                        Message sendMessage = await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            parseMode: ParseMode.Html,
-                            text: PleaseSubscribe,
-                            replyMarkup: checksubscribe,
-                            cancellationToken: cancellationToken
-                            );
+                        case "Кол-во вступивших в бот сегодня":
+                            if (message.From.Id == adminId) 
+                            {
+                                var reader2 = new SQLiteCommand($"SELECT COUNT(*) FROM Users WHERE StartTime >= datetime('now', '-1 day')", connection: connection).ExecuteReader();
+                                reader2.Read();
+                                int total_rows_in_resultset = reader2.GetInt32(0);
+                                await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: $"Кол во вступивших сегодня - {total_rows_in_resultset}",
+                                replyMarkup: adminmenu,
+                                cancellationToken: cancellationToken);
+                            }
+                        break;
+                        case "База пользователей":
+                            if (message.From.Id == adminId)
+                            {
+                                System.IO.File.Copy($"{stepBack}Users_DB.db)", $"{stepBack}Users_DB_COPY.db)", true);
+                                await using Stream stream = System.IO.File.OpenRead($"{stepBack}Users_DB_COPY.db");
+                                await botClient.SendDocumentAsync(
+                                chatId: chatId,
+                                document: InputFile.FromStream(stream),
+                                replyMarkup: adminmenu,
+                                cancellationToken: cancellationToken);
+                            }
+                            break;
+
+                        case "Comenzar a ganar": //start earning
+                            Message sendMessage = await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                parseMode: ParseMode.Html,
+                                text: PleaseSubscribe,
+                                replyMarkup: checksubscribe,
+                                cancellationToken: cancellationToken);
+                            break;
+
+                        case "Comprobar suscripción":
+                            var reader = new SQLiteCommand($"SELECT * FROM Users WHERE Id = {update.Message.From.Id}", connection: connection).ExecuteReader();
+
+                            if (reader.HasRows)
+                            {
+                                await botClient.SendTextMessageAsync(
+                                   chatId: chatId,
+                                   text: "500 MXN han sido abonados a tu saldo 💰",
+                                   cancellationToken: cancellationToken);
+
+                                new SQLiteCommand($"UPDATE Users SET Money = Money + 500 WHERE Id = {update.Message.From.Id};", connection: connection).ExecuteNonQuery();
+
+                                Thread.Sleep(1500);
+
+                                await using Stream stream = System.IO.File.OpenRead($"{resourcesPath}img1.png");
+                                await botClient.SendPhotoAsync(
+                                    chatId: chatId,
+                                    photo: InputFile.FromStream(stream),
+                                    parseMode: ParseMode.Html,
+                                    replyMarkup: menu,
+                                    caption: Instruction);
+                            }
+
+                            else
+                            {
+                               await botClient.SendTextMessageAsync(
+                                    chatId: chatId,
+                                    text: $"❗️<b>Para empezar,suscríbase a nuestro canal de noticias</b> 👇🏾\r\n\r\n {NewsChannelLink}",
+                                    replyMarkup: checksubscribe,
+                                    cancellationToken: cancellationToken);
+                            }
+                            break;
                     }
 
                     if (messageText.Contains("Comprobar suscripción")) //проверка пиписки
                     {
-                        SQLiteCommand command = new SQLiteCommand();
-                        command.Connection = connection;
-                        command.CommandText = $"SELECT * FROM Users WHERE Id = {update.Message.From.Id}";
-                        SQLiteDataReader reader = command.ExecuteReader();
-
-                        if (reader.HasRows)
-                        {
-                            //https://t.me/dasdasdasdasdasqweqw
-                            Message sendMessage = await botClient.SendTextMessageAsync(
-                               chatId: chatId,
-                               text: "500 MXN han sido abonados a tu saldo 💰",
-                               cancellationToken: cancellationToken);
-
-                            SQLiteCommand command2 = new SQLiteCommand();
-                            command2.Connection = connection;
-                            command2.CommandText = $"UPDATE Users SET Money = Money + 500 WHERE Id = {update.Message.From.Id};";
-                            command2.ExecuteNonQuery();
-
-                            Thread.Sleep(1500);
-
-                            await using Stream stream = System.IO.File.OpenRead($"{resourcesPath}img1.png");
-                            await botClient.SendPhotoAsync(
-                                chatId: chatId,
-                                photo: InputFile.FromStream(stream),
-                                parseMode: ParseMode.Html,
-                                replyMarkup: menu,
-                                caption: Instruction);
-                        }
-
-                        else
-                        {
-                            Message sendMessage = await botClient.SendTextMessageAsync(
-                                chatId: chatId,
-                                text: $"❗️<b>Para empezar,suscríbase a nuestro canal de noticias</b> 👇🏾\r\n\r\n {NewsChannelLink}",
-                                replyMarkup: checksubscribe,
-                                cancellationToken: cancellationToken);
-                        }
+                       
                     }
                     if (messageText.Contains("MENU GENERAL 📑"))
                     {
@@ -366,6 +402,15 @@ namespace ChatBot
                             chatId: chatId,
                             text: $"Dirija su pregunta a su gerente - {managerLink}",
                             replyMarkup: menu,
+                            cancellationToken: cancellationToken
+                            );
+                    }
+                    if (messageText.Contains("admin") && message.From.Id == adminId ) //готов
+                    {
+                        Message sendMessage = await botClient.SendTextMessageAsync(
+                            chatId: chatId,
+                            text: $"Dirija su pregunta a su gerente - {managerLink}",
+                            replyMarkup: adminmenu,
                             cancellationToken: cancellationToken
                             );
                     }
