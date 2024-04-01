@@ -95,7 +95,7 @@ namespace ChatBot
         {
             var connection = new SQLiteConnection(connectionString);
             connection.Open();
-            _botClient = new TelegramBotClient("6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60"); //1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ
+            _botClient = new TelegramBotClient("1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ"); //
             _receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[]
