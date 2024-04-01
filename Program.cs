@@ -39,7 +39,7 @@ namespace ChatBot
         #endregion
 
         #region Program сonstansts
-        private const string stepBack = "..//..//..//"; //stepback = "" if release, = "..//..//..//" if debug
+        private const string stepBack = ""; //stepback = "" if release, = "..//..//..//" if debug
         private const string resourcesPath = $"{stepBack}resources//";
         private const string connectionString = $"Data Source={stepBack}Users_DB.db";
         private const string NewsChannelLink = "https://t.me/+0gfb7z3CK3c5ODQ0";
@@ -95,7 +95,7 @@ namespace ChatBot
         {
             var connection = new SQLiteConnection(connectionString);
             connection.Open();
-            _botClient = new TelegramBotClient("1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ"); //
+            _botClient = new TelegramBotClient("6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60"); //1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ
             _receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[]
@@ -237,7 +237,6 @@ namespace ChatBot
                                 string fileName = "Users_DB.db";
                                 string COPYfileName = "Users_DB_COPY.db";
                                 System.IO.File.Copy(stepBack + fileName, stepBack + COPYfileName, true);
-                                string[] files = System.IO.Directory.GetFiles(stepBack);
                                 await using Stream stream = System.IO.File.OpenRead($"{stepBack}Users_DB_COPY.db");
                                 await botClient.SendDocumentAsync(
                                 chatId: chatId,
