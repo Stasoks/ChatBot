@@ -45,7 +45,7 @@ namespace ChatBot
         private const string NewsChannelLink = "https://t.me/+0gfb7z3CK3c5ODQ0";
         private const string managerLink = "@Matematicas_support";
         private const string BotId = "TeSt222288bot";
-        private const long adminId = 1760080161;
+        private readonly static List<long> adminId = new List<long>() { 1760080161, 6822735004 };
         #endregion
 
 
@@ -95,7 +95,7 @@ namespace ChatBot
         {
             var connection = new SQLiteConnection(connectionString);
             connection.Open();
-            _botClient = new TelegramBotClient("1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ"); //6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60
+            _botClient = new TelegramBotClient("6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60"); //1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ
             _receiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[]
@@ -218,7 +218,7 @@ namespace ChatBot
                     switch (messageText)
                     {
                         case "Кол-во вступивших в бот сегодня":
-                            if (message.From.Id == adminId) 
+                            if (adminId.Contains(message.From.Id)) 
                             {
                                 var reader2 = new SQLiteCommand($"SELECT COUNT(*) FROM Users WHERE StartTime >= datetime('now', '-1 day')", connection: connection).ExecuteReader();
                                 reader2.Read();
@@ -232,7 +232,7 @@ namespace ChatBot
                         break;
 
                         case "База пользователей":
-                            if (message.From.Id == adminId)
+                            if (adminId.Contains(message.From.Id))
                             {
                                 string fileName = "Users_DB.db";
                                 string COPYfileName = "Users_DB_COPY.db";
@@ -290,7 +290,7 @@ namespace ChatBot
                             break;
 
                         case "Количество людей приведенных через реф ссылки":
-                            if (message.From.Id == adminId)
+                            if (adminId.Contains(message.From.Id))
                             {
                                 var reader3 = new SQLiteCommand($"SELECT SUM(Friends) FROM Users WHERE Friends > 0", connection: connection).ExecuteReader();
                                 reader3.Read();
@@ -331,7 +331,7 @@ namespace ChatBot
                                 cancellationToken: cancellationToken);
                             break;
                         case "Руководство админа(подсказки по командам)":
-                            if(message.From.Id == adminId)
+                            if(adminId.Contains(message.From.Id))
                             {
                                 await botClient.SendTextMessageAsync(
                                     chatId: chatId,
@@ -343,7 +343,7 @@ namespace ChatBot
                     }
 
 
-                    if (messageText.Split(' ').First() == "/mailing" && message.From.Id == adminId)
+                    if (messageText.Split(' ').First() == "/mailing" && adminId.Contains(message.From.Id))
                     {
                         try
                         {
@@ -372,7 +372,7 @@ namespace ChatBot
                         }
                     }
 
-                    if (messageText.Split(' ').First() == "/balance" && message.From.Id == adminId) // bro writes balance conmmand, then with space writes user id and desired balanse
+                    if (messageText.Split(' ').First() == "/balance" && adminId.Contains(message.From.Id)) // bro writes balance conmmand, then with space writes user id and desired balanse
                     {
                         string[] messageParts = messageText.Split(' ');
                         int changebalance = int.Parse(messageParts[2]);
@@ -395,7 +395,7 @@ namespace ChatBot
 
                     }
 
-                    if (messageText.Split(' ').First() == "/typetouser" && message.From.Id == adminId) 
+                    if (messageText.Split(' ').First() == "/typetouser" && adminId.Contains(message.From.Id))
                     {
                         string[] messageParts = messageText.Split(' ');
                         string messagetousertext = messageText.Replace(messageParts[0],"");
@@ -485,7 +485,7 @@ namespace ChatBot
                             cancellationToken: cancellationToken
                             );
                     }
-                    if (messageText.Contains("admin") && message.From.Id == adminId ) //готов
+                    if (messageText.Contains("admin") && adminId.Contains(message.From.Id)) //готов
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
