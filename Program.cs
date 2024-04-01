@@ -6,6 +6,8 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Data.SQLite;
 using System.Xml.Linq;
+using System.Reflection.PortableExecutable;
+using System.Security.Policy;
 
 
 namespace ChatBot
@@ -63,9 +65,9 @@ namespace ChatBot
         {
             new KeyboardButton[] { "Кол-во вступивших в бот сегодня" },
             new KeyboardButton[] { "База пользователей" },
-            new KeyboardButton[] { "BALANCE 🤑" },
-            new KeyboardButton[] { "RETIRAR DINERO ❤️‍🔥" },
-             new KeyboardButton[] { "SERVICIO DE APOYO🛡" }
+            new KeyboardButton[] { "Количество людей приведенных через реф ссылки" },
+            new KeyboardButton[] { "Руководство админа(подсказки по командам)" },
+             new KeyboardButton[] { "MENU GENERAL 📑" }
         })
         {
             ResizeKeyboard = true
@@ -91,9 +93,6 @@ namespace ChatBot
 
         static async Task Main()
         {
-
-            //System.Data.SQLite
-
             var connection = new SQLiteConnection(connectionString);
             connection.Open();
             _botClient = new TelegramBotClient("1872154697:AAGUxJZjUloMjrjd5Qprw2ldJjfb2aqtysQ"); //6857834562:AAGNWEM9FXMyIh-oddr4FDQZNmrgdfmyb60
@@ -107,17 +106,11 @@ namespace ChatBot
 
                 ThrowPendingUpdates = true,
             };
-
             using var cts = new CancellationTokenSource();
-
-
             _botClient.StartReceiving(HandleUpdateAsync, HandlePollingErrorAsync, _receiverOptions, cts.Token);
-
             var me = await _botClient.GetMeAsync();
             Console.WriteLine($"{me.FirstName} is started!");
-
             await Task.Delay(-1);
-
             async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
             {   
                 var message = update.Message;
@@ -128,9 +121,7 @@ namespace ChatBot
                     chatId = message.Chat.Id;
                 }
                 var callback = update.CallbackQuery;
-
                 int answer = 0;
-
                 if (update.Type == UpdateType.ChatMember)
                 {
                     if (update.ChatMember != null)
@@ -141,7 +132,6 @@ namespace ChatBot
                         command.ExecuteNonQuery();
                     }
                 }
-
                 if (messageText != null)
                 {
                     if(int.TryParse(messageText, out answer)) 
@@ -192,7 +182,6 @@ namespace ChatBot
                             }
                         }
                     }
-
                     if (messageText.Contains("/start"))
                     {
                         ReplyKeyboardMarkup replyKeyboardMarkup = new(new[]
@@ -220,14 +209,12 @@ namespace ChatBot
                                     cancellationToken: cancellationToken);
                             }
                         }
-
                         Message sendMessage = await botClient.SendTextMessageAsync(
                              chatId: chatId,
                              text: StartMessage,
                              replyMarkup: replyKeyboardMarkup,
                              cancellationToken: cancellationToken);
                     }
-
                     switch (messageText)
                     {
                         case "Кол-во вступивших в бот сегодня":
@@ -243,14 +230,18 @@ namespace ChatBot
                                 cancellationToken: cancellationToken);
                             }
                         break;
+
                         case "База пользователей":
                             if (message.From.Id == adminId)
                             {
-                                System.IO.File.Copy($"{stepBack}Users_DB.db)", $"{stepBack}Users_DB_COPY.db)", true);
+                                string fileName = "Users_DB.db";
+                                string COPYfileName = "Users_DB_COPY.db";
+                                System.IO.File.Copy(stepBack + fileName, stepBack + COPYfileName, true);
+                                string[] files = System.IO.Directory.GetFiles(stepBack);
                                 await using Stream stream = System.IO.File.OpenRead($"{stepBack}Users_DB_COPY.db");
                                 await botClient.SendDocumentAsync(
                                 chatId: chatId,
-                                document: InputFile.FromStream(stream),
+                                document:InputFile.FromStream(stream: stream, fileName: "Users_DB.db"),
                                 replyMarkup: adminmenu,
                                 cancellationToken: cancellationToken);
                             }
@@ -297,36 +288,124 @@ namespace ChatBot
                                     cancellationToken: cancellationToken);
                             }
                             break;
-                    }
 
-                    if (messageText.Contains("Comprobar suscripción")) //проверка пиписки
-                    {
-                       
-                    }
-                    if (messageText.Contains("MENU GENERAL 📑"))
-                    {
-                        Message sendMessage = await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            parseMode: ParseMode.Html,
-                            text: "<b>Seleccione una de las opciones del menú</b> 📲",
-                            replyMarkup: menu,
-                            cancellationToken: cancellationToken);
-                    }
+                        case "Количество людей приведенных через реф ссылки":
+                            if (message.From.Id == adminId)
+                            {
+                                var reader3 = new SQLiteCommand($"SELECT SUM(Friends) FROM Users WHERE Friends > 0", connection: connection).ExecuteReader();
+                                reader3.Read();
+                                int sumfriends = reader3.GetInt32(0);
+                                await botClient.SendTextMessageAsync(
+                                    chatId: chatId,
+                                    text: $"Количество приглашенных пользователей - {sumfriends}" ,
+                                    replyMarkup: adminmenu,
+                                    cancellationToken: cancellationToken);
+                            }
+                            break;
 
-                    if (messageText.Contains("INVITA A TUS AMIGOS (+500MXN) 📥"))
-                    {
+                        case "MENU GENERAL 📑":
+
+                            await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                parseMode: ParseMode.Html,
+                                text: "<b>Seleccione una de las opciones del menú</b> 📲",
+                                replyMarkup: menu,
+                                cancellationToken: cancellationToken);
+                            break;
+
+                        case "INVITA A TUS AMIGOS (+500MXN) 📥":
+
                         await botClient.SendTextMessageAsync(
                             chatId: chatId,
                             parseMode: ParseMode.Html,
                             text: $"❗️<b>Reenvía este mensaje a tus amigos y por cada amigo que se una a través de este enlace, recibirás 500 MXN</b> ❗️\r\n\r\n⤵️⤵️⤵️⤵️⤵️⤵️⤵️⤵️⤵️",
                             replyMarkup: menu,
                             cancellationToken: cancellationToken);
-                        Thread.Sleep(1500);
-                        await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            text: $"Este es un bot de inteligencia artificial para cálculos matemáticos, ayúdalo a desarrollarse - realiza tareas sencillas y gana más de 16 000 MXN al día 📲\r\n\r\n\r\n 👉🏾 https://t.me/{BotId}?start={message.From.Id}  👈🏾",
-                            replyMarkup: menu,
-                            cancellationToken: cancellationToken);
+
+                            Thread.Sleep(1500);
+
+                            await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: $"Este es un bot de inteligencia artificial para cálculos matemáticos, ayúdalo a desarrollarse - realiza tareas sencillas y gana más de 16 000 MXN al día 📲\r\n\r\n\r\n 👉🏾 https://t.me/{BotId}?start={message.From.Id}  👈🏾",
+                                replyMarkup: menu,
+                                cancellationToken: cancellationToken);
+                            break;
+                        case "Руководство админа(подсказки по командам)":
+                            if(message.From.Id == adminId)
+                            {
+                                await botClient.SendTextMessageAsync(
+                                    chatId: chatId,
+                                    text: "/balance через пробел Айди пользователя (значение Id из базы данных) через пробел Сумма на которую хотите увеличить баланс(если хотите отнять баланс прописываете сумму, на которую хотите его уменьшить с минусом в начале\n/typetouser через пробел Айди пользователя(значение Id из базы данных) через пробел Текст сообщения которое вы хотите отправить пользователю",
+                                    replyMarkup: adminmenu,
+                                    cancellationToken: cancellationToken);
+                            }
+                            break;
+                    }
+
+
+                    if (messageText.Split(' ').First() == "/mailing" && message.From.Id == adminId)
+                    {
+                        try
+                        {
+                            SQLiteCommand command = connection.CreateCommand();
+                            command.CommandText = "SELECT Id FROM Users";
+                            SQLiteDataReader reader = command.ExecuteReader();
+                            List<string[]> data = new List<string[]>();
+                            while (reader.Read())
+                            {
+                                data.Add(new string[1]);
+                                data[data.Count - 1][0] = reader[0].ToString();
+                            }
+                            reader.Close();
+                            connection.Close();
+                            foreach (string[] s in data)
+                            {
+                                Message sendmessage = await botClient.SendTextMessageAsync(
+                                chatId: s[0].ToString(),
+                                text: messageText.Substring(9),
+                                cancellationToken: cancellationToken);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error: " + ex);
+                        }
+                    }
+
+                    if (messageText.Split(' ').First() == "/balance" && message.From.Id == adminId) // bro writes balance conmmand, then with space writes user id and desired balanse
+                    {
+                        string[] messageParts = messageText.Split(' ');
+                        int changebalance = int.Parse(messageParts[2]);
+                        long changeuser = long.Parse(messageParts[1]);
+
+                        var reader = new SQLiteCommand($"SELECT Money FROM Users WHERE Id = {changeuser}", connection: connection).ExecuteReader();
+                        reader.Read();
+
+                        long Money = (long)reader.GetValue(0);
+                        Message sendmessage = await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: $"Прежний баланс пользователя - {Money}",
+                                cancellationToken: cancellationToken);
+
+                        new SQLiteCommand($"UPDATE Users SET Money = Money + {changebalance} WHERE Id = {changeuser};", connection).ExecuteNonQuery();
+                        Message sendmessage1 = await botClient.SendTextMessageAsync(
+                                chatId: chatId,
+                                text: $"Новый баланс пользователя - {Money + changebalance}",
+                                cancellationToken: cancellationToken);
+
+                    }
+
+                    if (messageText.Split(' ').First() == "/typetouser" && message.From.Id == adminId) 
+                    {
+                        string[] messageParts = messageText.Split(' ');
+                        string messagetousertext = messageText.Replace(messageParts[0],"");
+                        messagetousertext = messagetousertext.Replace(messageParts[1], "");
+                        long usertotype = long.Parse(messageParts[1]);
+                        Message sendmessage1 = await botClient.SendTextMessageAsync(
+                                chatId: usertotype,
+                                text: messagetousertext,
+                                cancellationToken: cancellationToken);
+
                     }
 
                     if (messageText.Contains("BALANCE 🤑"))
@@ -335,6 +414,7 @@ namespace ChatBot
                         command.Connection = connection;
                         command.CommandText = $"SELECT Money, Friends, Cases FROM Users WHERE Id = {update.Message.From.Id}";
                         SQLiteDataReader reader = command.ExecuteReader();
+                        
                         string Money = "";
                         string Friends = "";
                         string Cases = "";
@@ -409,7 +489,7 @@ namespace ChatBot
                     {
                         Message sendMessage = await botClient.SendTextMessageAsync(
                             chatId: chatId,
-                            text: $"Dirija su pregunta a su gerente - {managerLink}",
+                            text: "Вызвана админ панель",
                             replyMarkup: adminmenu,
                             cancellationToken: cancellationToken
                             );
