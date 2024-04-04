@@ -129,12 +129,12 @@ namespace ChatBot
                     {
                         SQLiteCommand command = new SQLiteCommand();
                         command.Connection = connection;
-                        command.CommandText = $"INSERT INTO Users (Id, Username, Money, Friends, Cases, StartTime, IsStarted) VALUES ('{update.ChatMember.NewChatMember.User.Id}', {update.ChatMember.NewChatMember.User.Username}, 0, 0, 0, datetime('now'), 0)";
+                        command.CommandText = $"INSERT INTO Users (Id, Username, Money, Friends, Cases, StartTime, IsStarted) VALUES ('{update.ChatMember.NewChatMember.User.Id}', '{update.ChatMember.NewChatMember.User.Username}', 0, 0, 0, datetime('now'), 0)";
                         command.ExecuteNonQuery();
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        await Console.Out.WriteAsync($"Try enter twice\n");
+                        await Console.Out.WriteAsync(ex.Message);
                     }
 
                 }
@@ -339,7 +339,7 @@ namespace ChatBot
                             {
                                 await botClient.SendTextMessageAsync(
                                     chatId: chatId,
-                                    text: "/balance через пробел Айди пользователя (значение Id из базы данных) через пробел Сумма на которую хотите увеличить баланс(если хотите отнять баланс прописываете сумму, на которую хотите его уменьшить с минусом в начале\n/typetouser через пробел Айди пользователя(значение Id из базы данных) через пробел Текст сообщения которое вы хотите отправить пользователю\n",
+                                    text: "/balance через пробел Айди пользователя (значение Id из базы данных) через пробел Сумма на которую хотите увеличить баланс(если хотите отнять баланс прописываете сумму, на которую хотите его уменьшить с минусом в начале\n/typetouser через пробел Айди пользователя(значение Id из базы данных) через пробел Текст сообщения которое вы хотите отправить пользователю\n/mailing и через пробел текст рассылки",
                                     replyMarkup: adminmenu,
                                     cancellationToken: cancellationToken);
                             }
@@ -443,31 +443,6 @@ namespace ChatBot
                                 cancellationToken: cancellationToken);
                     }
 
-                    if (messageText.Contains("BALANCE 🤑"))
-                    {
-                        var balanceReader = new SQLiteCommand($"SELECT Money, Friends, Cases FROM Users WHERE Id = {update.Message.From.Id}", connection).ExecuteReader();
-
-                        string Money = "";
-                        string Friends = "";
-                        string Cases = "";
-
-                        if (balanceReader.HasRows)
-                        {
-                            while (balanceReader.Read())
-                            {
-                                Money   = balanceReader.GetValue(0).ToString();
-                                Friends = balanceReader.GetValue(1).ToString();
-                                Cases   = balanceReader.GetValue(2).ToString();
-                            }
-                        }
-
-                        await botClient.SendTextMessageAsync(
-                            chatId: chatId,
-                            parseMode : ParseMode.Html,
-                            text: $"❗️Tu número es - <b>{update.Message.From.Id}</b> ❗️\r\n\r\n\r\n🔢 Número de ejemplos\r\nresueltos - <b>{Cases}</b>\r\n\r\n📥 Número de amigos\r\ninvitados - {Friends}\r\n\r\n💰Tu saldo - <b>{Money}</b>",
-                            replyMarkup: menu,
-                            cancellationToken: cancellationToken); 
-                    }
                     if (messageText.Contains("RETIRAR DINERO ❤️‍🔥"))
                     {
                         var reader = new SQLiteCommand($"SELECT Money FROM Users WHERE Id = {update.Message.From.Id}", connection).ExecuteReader();
